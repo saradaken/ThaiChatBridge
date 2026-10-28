@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "product": "ThaiChatBridge",
+  "platform": "pc-native",
+  "updater_abi": 1,
+  "revision": 2503,
+  "version": "PC 1.3 R25 test2 / Native Update 1",
+  "commit": "d3ec6e3aaa056e7adb16f29680b36d68d166281a",
+  "notes": "Native Update 1: R25 test2 message core with separate ThaiChatUpdater 1.0 test2 and Gradient Spinner UI. Verified downloads, backup, game-exit installation and rollback. Message codec unchanged. Android not included.",
+  "files": [
+    {
+      "path": "ThaiChatBridge.asi",
+      "size": 1050112,
+      "sha256": "e7dd6ffa62acd26acadda819166368d3a04fd9a2b53313ba61e8e1c67db50622"
+    },
+    {
+      "path": "ThaiChatUpdater.asi",
+      "size": 216064,
+      "sha256": "2ffdb8794c39ef11bffe4fa7aa4d6c81def05da6b75cde58e3c4237292ef2c03"
+    },
+    {
+      "path": "moonloader/ThaiChatTools.lua",
+      "size": 1327,
+      "sha256": "ab3e23200bdc357a93e39be1dec4f66fb4043212e9d336d36619e514a02fbbaf"
+    },
+    {
+      "path": "moonloader/lib/thaichat/native_tools.lua",
+      "size": 7167,
+      "sha256": "d13dc9b7bb338e8eb41d91c033b7b44e5471a220f65f97d3784ea57c672ad8cd"
+    },
+    {
+      "path": "moonloader/lib/thaichat/codec_lab.lua",
+      "size": 13444,
+      "sha256": "6324f91deaa1933baf6b0453b801b0ec0d78c8321065a2601190ee29c85f428a"
+    },
+    {
+      "path": "moonloader/lib/thaichat/cef_view.lua",
+      "size": 5512,
+      "sha256": "4ca4496adc6e77c46d1d0770d9370df533b87cee14dafe69ed3b94ee8d52195d"
+    },
+    {
+      "path": "moonloader/lib/thaichat/updater_client.lua",
+      "size": 2191,
+      "sha256": "e8cda0e5c3c608563e51676b5ad530574fd7899a9c6f321e74f231a2fd50f2a9"
+    },
+    {
+      "path": "moonloader/resource/thaichat-codec-ui.js",
+      "size": 63586,
+      "sha256": "de8d2206c906a607d5c4eb881059b0a025b8d6920ca0a5170a5579709a808d47"
+    },
+    {
+      "path": "moonloader/resource/thaichat-control.css",
+      "size": 30183,
+      "sha256": "f602ae08028266f5ba003f5dd2f68c318b9d91466d6d9874c7e65cc374c264fd"
+    },
+    {
+      "path": "moonloader/ThaiChatUpdaterUI.lua",
+      "size": 565,
+      "sha256": "7788c11eee7d20accb1a25e971aaa140ccbbd273a5e4ecc282979e26891b3f36"
+    },
+    {
+      "path": "moonloader/lib/thaichat/updater_ui.lua",
+      "size": 3337,
+      "sha256": "908c23172a7bfb72f3925791b2c1057f7e1f19c6b50054d4c2e9d92a41c2b048"
+    },
+    {
+      "path": "moonloader/resource/thaichat-updater-ui.js",
+      "size": 50269,
+      "sha256": "6968c0bb398a7f2cd6e3a5fe73cc3e67d238c20d9da8bd0cda486b71bade77ef"
+    },
+    {
+      "path": "moonloader/resource/thaichat-updater.css",
+      "size": 424067,
+      "sha256": "1d6d85236291fd7d54c2417335605ef570f1aba60cfffc89a358d5b59174ca0b"
+    }
+  ]
+}
