@@ -39,8 +39,8 @@
     },
     {
       "path": "resource/thaichat-codec-ui.js",
-      "size": 24857,
-      "sha256": "28dfb708800e2b0b882b2841d3afe4157249036e772fa50f17b6807a638abae4"
+      "size": 24910,
+      "sha256": "ae60e392485094c10c4dd7b59c29df8e5d68e4d53f3e51cce17c4715f9c8eb9d"
     },
     {
       "path": "resource/thaichat-control.css",
@@ -53,5 +53,5 @@
       "sha256": "565aaec33daa5a5f479854023bb3674dcc50b9a0554a217bd92897a6b7c61693"
     }
   ],
-  "commit": "b83865eea4afe501079718c1e50d3cd7d1e6817c"
+  "commit": "051391372ef842879e2369463027d05710394565"
 }
