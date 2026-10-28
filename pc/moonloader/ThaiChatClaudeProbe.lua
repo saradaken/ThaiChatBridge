@@ -744,7 +744,7 @@ function events.onPlayerChatBubble(id,color,distance,duration,text)
 end
 local json=require 'dkjson'
 local SenderEnabled=true
-local Ui={visible=false,ready=false,caseId=2,channel='normal',last='',wasCursor=false,openedAt=0,ack=0}
+local Ui={visible=false,ready=false,caseId=2,channel='normal',channels={'normal'},last='',wasCursor=false,openedAt=0,ack=0}
 local UiSession=tostring(os.time())..tostring(math.floor(os.clock()*1000000))
 local CaseLabels={'Thai sentence','Thai + Hello','Thai / English / Russian / emoji / item',
     'Long Thai (capacity test)','Mixed languages, different order','Emoji ZWJ / skin / mixed',
@@ -806,21 +806,23 @@ local function cefEval(js)
 end
 local function uiState()
     local c=cases[Ui.caseId]
-    local wire,n,mode,e,stats=build(c.raw,c.encoding,limits[Ui.channel])
+    local budget=limits[Ui.channel]
+    for _,channel in ipairs(Ui.channels)do budget=math.min(budget,limits[channel])end
+    local wire,n,mode,e,stats=build(c.raw,c.encoding,budget)
     local utf8=Native.to_utf8(c.raw,c.encoding)or '[Invalid input]'
     local rows,caseList={},{}
     for id=0,9 do rows[#rows+1]={id=id,enabled=CodecOptions.enabled[id],bytes=stats[id]and stats[id].bytes or json.null}end
     for id=1,#cases do caseList[#caseList+1]={id=id,label=CaseLabels[id]or('Case '..id)}end
     local finite=n~=math.huge
-    local canSend=#c.raw>0 and wire~=nil and SenderEnabled and #queue==0 and getGameTimer()>=nextSend
+    local canSend=#Ui.channels>0 and #c.raw>0 and wire~=nil and SenderEnabled and #queue==0 and getGameTimer()>=nextSend
     local remaining=math.ceil(math.max(0,nextSend-getGameTimer())/1000)
-    local reason=not SenderEnabled and 'Test sending is OFF' or not finite and 'No enabled codec selected' or
+    local reason=#Ui.channels==0 and 'Select at least one channel' or not SenderEnabled and 'Test sending is OFF' or not finite and 'No enabled codec selected' or
         not wire and 'Over budget: this message will NOT be sent' or #queue>0 and 'A test is queued' or
         getGameTimer()<nextSend and ('Wait '..remaining..' seconds') or 'Fits the observed channel budget'
-    return {version='PC 1.3 R24',update=Updater and Updater:state()or{phase='error',message=UpdateError or'Updater unavailable',canCheck=false},session=UiSession,ack=Ui.ack,master=SenderEnabled,caseId=Ui.caseId,channel=Ui.channel,force=CodecOptions.force,
+    return {version='PC 1.3 R24',update=Updater and Updater:state()or{phase='error',message=UpdateError or'Updater unavailable',canCheck=false},session=UiSession,ack=Ui.ack,master=SenderEnabled,caseId=Ui.caseId,channel=Ui.channel,channels=Ui.channels,force=CodecOptions.force,
         live=live.enabled,liveAvailable=liveApi~=nil,liveStatus=live.status,liveMs=live.ms,
         remaining=remaining,queued=#queue+(live.pending and 1 or 0),computeMs=lastBuildMs,
-        text=utf8,rows=rows,cases=caseList,budget=limits[Ui.channel],bytes=finite and n or json.null,
+        text=utf8,rows=rows,cases=caseList,budget=budget,bytes=finite and n or json.null,
         selectedMode=mode or json.null,canSend=canSend,reason=reason,last=Ui.last,wasCursor=Ui.wasCursor,phrases=PHRASES,phrase=PHRASE}
 end
 local function uiRefresh()
@@ -876,12 +878,26 @@ UiControl=function(arg)
             if raw and Native.to_utf8(raw,encoding)==text then cases[11]={raw=raw,encoding=encoding};CaseLabels[11]='Custom text';Ui.caseId=11 end
         end
     elseif action=='case'then local id=tonumber(rest);if id and cases[id]and id==math.floor(id)then Ui.caseId=id end
-    elseif action=='channel'and prefixes[rest]then Ui.channel=rest
+    elseif action=='channels'then
+        local requested,valid={},true
+        if rest~=''then
+            if rest:sub(1,1)==','or rest:sub(-1)==','or rest:find(',,',1,true)then valid=false end
+            for channel in rest:gmatch('[^,]+')do
+                if not prefixes[channel]or requested[channel]then valid=false end
+                requested[channel]=true
+            end
+        end
+        if valid then
+            Ui.channels={}
+            for _,channel in ipairs({'normal','s','b','me'})do if requested[channel]then Ui.channels[#Ui.channels+1]=channel end end
+            Ui.channel=Ui.channels[1]or'normal'
+        end
+    elseif action=='channel'and prefixes[rest]then Ui.channel=rest;Ui.channels={rest}
     elseif action=='stop'then queue={};live:cancel();Ui.last='Queue stopped'
     elseif action=='send'then
         if uiState().canSend then
-            queue[1]={channel=Ui.channel,case=cases[Ui.caseId],index=Ui.caseId}
-            Ui.last='Queued case '..Ui.caseId..' (one message)'
+            for _,channel in ipairs(Ui.channels)do queue[#queue+1]={channel=channel,case=cases[Ui.caseId],index=Ui.caseId}end
+            Ui.last='Queued '..#queue..' channels (8 seconds apart)'
         end
     end
     log('CEF_UI_CONTROL action='..tostring(action)..' request='..request..' value='..tostring(rest))
