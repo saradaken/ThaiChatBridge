@@ -2,15 +2,15 @@
   "schema": 1,
   "product": "ThaiChatBridge",
   "platform": "pc",
-  "revision": 240102,
-  "version": "PC 1.3 R24 / Update 2",
+  "revision": 240103,
+  "version": "PC 1.3 R24 / Update 3",
   "requires_asi": "1.3 R24",
-  "notes": "Update 2: UI ที่เลือก 4 แบบ พร้อมข้อมูลจริงและ CSS ออฟไลน์ แก้การรอไฟล์ดาวน์โหลดให้เขียนเสร็จก่อนติดตั้ง",
+  "notes": "Update 3: Bento เท่านั้น เลือกหลายช่องส่งพร้อมคิว8วินาที ปุ่มแสดงสถานะจริง ลากหน้าต่างได้ และคงแจ้งเตือน4แบบให้ตามตำแหน่ง Bento",
   "files": [
     {
       "path": "lib/thaichat/update_core.lua",
       "size": 9067,
-      "sha256": "48b16a637e09b5a93b2ca4e1ac27b15fd4fe9064d3ed5cf7b190dd744e386022"
+      "sha256": "14c682c852981532bb81900167c895ebd780e1fb1b6dcc2835e8da86e77a4053"
     },
     {
       "path": "lib/thaichat/update_runtime.lua",
@@ -39,19 +39,19 @@
     },
     {
       "path": "resource/thaichat-codec-ui.js",
-      "size": 58813,
-      "sha256": "a70a8f359aba0060001040142b4f790b2d44fc26ae50b34702f38906224097d7"
+      "size": 63351,
+      "sha256": "cb9e88def72afb032239112020cd1c456e388886d0366bb35788a7a6f09506f4"
     },
     {
       "path": "resource/thaichat-control.css",
-      "size": 28740,
-      "sha256": "022e26b8c2cdf2f38b910b5763508969b527ed3774a49520b8738d49dfbf5ca8"
+      "size": 30183,
+      "sha256": "f602ae08028266f5ba003f5dd2f68c318b9d91466d6d9874c7e65cc374c264fd"
     },
     {
       "path": "ThaiChatClaudeProbe.lua",
-      "size": 52459,
-      "sha256": "7e82e0cc765c44312b4501d3ad222e09cbac36aa0a7f1c4758785331cb00d85d"
+      "size": 53377,
+      "sha256": "25a3c05e752559a45aa06090857033bb12618518e337d3d9702066052e834ae7"
     }
   ],
-  "commit": "1331201e3756d7f2a2642de01eb4272637c849bc"
+  "commit": "3fa0a2b514580c3649e078fc1637586de62d37f2"
 }
