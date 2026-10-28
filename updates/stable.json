@@ -2,15 +2,15 @@
   "schema": 1,
   "product": "ThaiChatBridge",
   "platform": "pc",
-  "revision": 240101,
-  "version": "PC 1.3 R24 / Update 1",
+  "revision": 240102,
+  "version": "PC 1.3 R24 / Update 2",
   "requires_asi": "1.3 R24",
-  "notes": "เพิ่มตรวจเวอร์ชัน ติดตั้ง Lua/CEF จาก GitHub พร้อมตรวจ SHA256 สำรอง ZIP และย้อนกลับ ไม่เปลี่ยน ASI",
+  "notes": "Update 2: UI ที่เลือก 4 แบบ Classic / Bento / Side Drawer / Modern ImGui เชื่อมข้อมูลจริง แก้ข้อความตัวอย่างได้ และรวม CSS ออฟไลน์",
   "files": [
     {
       "path": "lib/thaichat/update_core.lua",
       "size": 9067,
-      "sha256": "78cb1ec00cc7b4db1790701c03107d71fa6b64d9e035f60134c8f698de803eff"
+      "sha256": "48b16a637e09b5a93b2ca4e1ac27b15fd4fe9064d3ed5cf7b190dd744e386022"
     },
     {
       "path": "lib/thaichat/update_runtime.lua",
@@ -39,19 +39,19 @@
     },
     {
       "path": "resource/thaichat-codec-ui.js",
-      "size": 24910,
-      "sha256": "ae60e392485094c10c4dd7b59c29df8e5d68e4d53f3e51cce17c4715f9c8eb9d"
+      "size": 58813,
+      "sha256": "a70a8f359aba0060001040142b4f790b2d44fc26ae50b34702f38906224097d7"
     },
     {
       "path": "resource/thaichat-control.css",
-      "size": 6630,
-      "sha256": "b3081780e5a1ba74d643dd76f4ba5545e7e674d4e29adb7e1467ef3db3587846"
+      "size": 28740,
+      "sha256": "022e26b8c2cdf2f38b910b5763508969b527ed3774a49520b8738d49dfbf5ca8"
     },
     {
       "path": "ThaiChatClaudeProbe.lua",
-      "size": 51613,
-      "sha256": "565aaec33daa5a5f479854023bb3674dcc50b9a0554a217bd92897a6b7c61693"
+      "size": 52459,
+      "sha256": "7e82e0cc765c44312b4501d3ad222e09cbac36aa0a7f1c4758785331cb00d85d"
     }
   ],
-  "commit": "051391372ef842879e2369463027d05710394565"
+  "commit": "dec3329934f4a3afc362a9c6b0a18be63512b286"
 }
