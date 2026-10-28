@@ -138,8 +138,12 @@ function M.new(root,clock,options)
         if url:find('/main/updates/stable.json',1,true)then url=url..'?check='..os.time()end
         local ok,err=pcall(downloadUrlToFile,url,request.path,function(_,status,received,total)
             if job~=request then return end
-            if (received and received>max)or(total and total>max)then request.error='Download exceeds expected size' end
-            if status==6 then request.finished=true elseif status<0 then request.error='Download failed';request.finished=true end
+            if status==4 or status==5 or status==6 then
+                if (received and received>max)or(total and total>max)then request.error='Download exceeds expected size' end
+            end
+            -- DATA end (6) precedes the file write/close in MoonLoader.
+            -- END DOWNLOAD (58) is the completed binding, safe to read.
+            if status==58 then request.finished=true elseif status<0 then request.error='Download failed';request.finished=true end
         end)
         if not ok then request.error=tostring(err);request.finished=true end
     end
