@@ -5,7 +5,7 @@
   "revision": 240102,
   "version": "PC 1.3 R24 / Update 2",
   "requires_asi": "1.3 R24",
-  "notes": "Update 2: UI ที่เลือก 4 แบบ Classic / Bento / Side Drawer / Modern ImGui เชื่อมข้อมูลจริง แก้ข้อความตัวอย่างได้ และรวม CSS ออฟไลน์",
+  "notes": "Update 2: UI ที่เลือก 4 แบบ พร้อมข้อมูลจริงและ CSS ออฟไลน์ แก้การรอไฟล์ดาวน์โหลดให้เขียนเสร็จก่อนติดตั้ง",
   "files": [
     {
       "path": "lib/thaichat/update_core.lua",
@@ -14,8 +14,8 @@
     },
     {
       "path": "lib/thaichat/update_runtime.lua",
-      "size": 10531,
-      "sha256": "bb44fafa85027478063948f3a361445b357d139bb39fd3006ac0822c96bf661b"
+      "size": 10754,
+      "sha256": "71117df162fb9b183e2c7abfd7a09311b080fda8c26d9fb24cbf0fb805b25a9a"
     },
     {
       "path": "lib/thaichat/carrier_bubble.lua",
@@ -53,5 +53,5 @@
       "sha256": "7e82e0cc765c44312b4501d3ad222e09cbac36aa0a7f1c4758785331cb00d85d"
     }
   ],
-  "commit": "dec3329934f4a3afc362a9c6b0a18be63512b286"
+  "commit": "1331201e3756d7f2a2642de01eb4272637c849bc"
 }
