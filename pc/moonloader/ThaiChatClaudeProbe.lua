@@ -787,7 +787,13 @@ local function cefAscii(js)
 end
 local function cefEval(js)
     js=cefAscii(js)
-    if #js>32000 then return false end
+    if #js>32000 then
+        if not cefEval("window.__thCodecChunk='';")then return false end
+        for i=1,#js,10000 do
+            if not cefEval('window.__thCodecChunk+='..json.encode(js:sub(i,i+9999))..';')then return false end
+        end
+        return cefEval('(0,eval)(window.__thCodecChunk);delete window.__thCodecChunk;')
+    end
     local bs=raknetNewBitStream()
     local ok,err=pcall(function()
         raknetBitStreamWriteInt8(bs,17);raknetBitStreamWriteInt32(bs,0)
@@ -806,7 +812,7 @@ local function uiState()
     for id=0,9 do rows[#rows+1]={id=id,enabled=CodecOptions.enabled[id],bytes=stats[id]and stats[id].bytes or json.null}end
     for id=1,#cases do caseList[#caseList+1]={id=id,label=CaseLabels[id]or('Case '..id)}end
     local finite=n~=math.huge
-    local canSend=wire~=nil and SenderEnabled and #queue==0 and getGameTimer()>=nextSend
+    local canSend=#c.raw>0 and wire~=nil and SenderEnabled and #queue==0 and getGameTimer()>=nextSend
     local remaining=math.ceil(math.max(0,nextSend-getGameTimer())/1000)
     local reason=not SenderEnabled and 'Test sending is OFF' or not finite and 'No enabled codec selected' or
         not wire and 'Over budget: this message will NOT be sent' or #queue>0 and 'A test is queued' or
@@ -862,6 +868,13 @@ UiControl=function(arg)
         local id=tonumber(rest)
         if rest=='auto'then CodecOptions.force='auto';queue={}
         elseif id and id>=0 and id<=9 and id==math.floor(id)then CodecOptions.force=id;queue={}end
+    elseif action=='source'then
+        if #rest<=800 and #rest%2==0 and not rest:find('[^a-fA-F0-9]')then
+            local text=rest:gsub('%x%x',function(pair)return string.char(tonumber(pair,16))end)
+            local raw=Native.from_utf8(text,0);local encoding=0
+            if not raw or Native.to_utf8(raw,0)~=text then raw=Native.from_utf8(text,1);encoding=1 end
+            if raw and Native.to_utf8(raw,encoding)==text then cases[11]={raw=raw,encoding=encoding};CaseLabels[11]='Custom text';Ui.caseId=11 end
+        end
     elseif action=='case'then local id=tonumber(rest);if id and cases[id]and id==math.floor(id)then Ui.caseId=id end
     elseif action=='channel'and prefixes[rest]then Ui.channel=rest
     elseif action=='stop'then queue={};live:cancel();Ui.last='Queue stopped'

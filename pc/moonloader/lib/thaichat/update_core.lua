@@ -1,5 +1,5 @@
 -- Network/filesystem adapters are injected so failures can be tested off-game.
-local M={revision=240101,version='PC 1.3 R24 / Update 1',repo='saradaken/ThaiChatBridge'}
+local M={revision=240102,version='PC 1.3 R24 / Update 2',repo='saradaken/ThaiChatBridge'}
 M.paths={'lib/thaichat/update_core.lua','lib/thaichat/update_runtime.lua','lib/thaichat/carrier_bubble.lua','lib/thaichat/live_auto.lua','lib/thaichat/wide_dictionary.lua','lib/thaichat/wide_dictionary_data.lua','resource/thaichat-codec-ui.js','resource/thaichat-control.css','ThaiChatClaudeProbe.lua'}
 local allowed={};for _,p in ipairs(M.paths)do allowed[p]=true end
 local function integer(n)return type(n)=='number' and n==math.floor(n)end

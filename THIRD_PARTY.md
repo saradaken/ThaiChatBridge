@@ -1,5 +1,9 @@
 # Dictionary sources
 
+## UI styling
+
+Update 2 includes generated Tailwind CSS **v3.4.17** from the user-supplied HTML prototype. The upstream MIT license notice remains in the compiled stylesheet. Project and license: https://github.com/tailwindlabs/tailwindcss/tree/v3.4.17
+
 ThaiChatBridge Wide Dictionary V1 includes filtered Thai words and syllables from PyThaiNLP:
 
 - Project: https://github.com/PyThaiNLP/pythainlp

@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThaiChatBridge / Codec Lab — Multi-Template & Animated Notifications CEF</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter, Noto Sans Thai & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans Thai"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-drag: none;
+            -webkit-font-smoothing: antialiased;
+        }
+        input, textarea {
+            user-select: text;
+        }
+
+        /* Clean Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        /* Simulated In-Game Scene Background */
+        body.game-preview-bg {
+            background-color: #101318;
+            background-image: 
+                radial-gradient(circle at 18% 22%, rgba(56, 78, 108, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 82% 76%, rgba(36, 62, 74, 0.22) 0%, transparent 55%),
+                linear-gradient(180deg, #13171e 0%, #0b0d11 100%);
+        }
+        body.cef-transparent-bg {
+            background: transparent !important;
+        }
+
+        /* Natural Desktop Window Surface */
+        .cef-surface {
+            background: rgba(19, 22, 28, 0.96);
+            backdrop-filter: blur(24px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 24px 48px -12px rgba(0, 0, 0, 0.65),
+                0 0 0 1px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+        }
+
+        /* Modern ImGui Evolved Surface */
+        .imgui-surface {
+            background: rgba(16, 18, 22, 0.97);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.75);
+        }
+
+        .cef-card {
+            background: rgba(26, 30, 38, 0.74);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+        }
+
+        /* Selected Codec Row Accent */
+        .row-active-highlight {
+            background: rgba(59, 130, 246, 0.11);
+            position: relative;
+        }
+        .row-active-highlight::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 5px;
+            bottom: 5px;
+            width: 3px;
+            border-radius: 0 4px 4px 0;
+            background: #3b82f6;
+        }
+
+        /* Clean Custom Checkbox */
+        .clean-checkbox {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.03);
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+            flex-shrink: 0;
+        }
+        .clean-checkbox:hover {
+            border-color: rgba(255, 255, 255, 0.42);
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+        .clean-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .clean-checkbox:checked::before {
+            content: "";
+            width: 8.5px;
+            height: 5px;
+            border-left: 1.8px solid #ffffff;
+            border-bottom: 1.8px solid #ffffff;
+            transform: rotate(-45deg) translate(0.5px, -0.5px);
+        }
+
+        /* ================= NATURAL SPRING & KEYFRAME ANIMATIONS ================= */
+        @keyframes springPopIn {
+            0% { opacity: 0; transform: translateY(-18px) scale(0.92); }
+            65% { opacity: 1; transform: translateY(2px) scale(1.015); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes toastSlideInRight {
+            0% { opacity: 0; transform: translateX(36px) scale(0.95); }
+            70% { opacity: 1; transform: translateX(-3px) scale(1.01); }
+            100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes whisperSlideLeft {
+            0% { opacity: 0; transform: translateX(-28px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes horizontalShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-7px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(3px); }
+        }
+        @keyframes drawCheckmark {
+            0% { stroke-dashoffset: 28; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes softPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.9); }
+        }
+        @keyframes hotReloadSweep {
+            0% { transform: translateX(-100%); opacity: 0; }
+            40% { opacity: 0.35; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes countdownShrink {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
+
+        .anim-spring-pop {
+            animation: springPopIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .anim-toast-in {
+            animation: toastSlideInRight 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .anim-whisper-in {
+            animation: whisperSlideLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .anim-shake {
+            animation: horizontalShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+        .svg-check-draw {
+            stroke-dasharray: 28;
+            stroke-dashoffset: 28;
+            animation: drawCheckmark 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+        }
+        .animate-soft-pulse {
+            animation: softPulse 2.4s ease-in-out infinite;
+        }
+        .shimmer-sweep-overlay {
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.18), rgba(16, 185, 129, 0.18), transparent);
+            animation: hotReloadSweep 0.9s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="game-preview-bg min-h-screen flex flex-col items-center p-2.5 sm:p-5 text-zinc-200 overflow-x-hidden relative">
+
+    <!-- ================= SIMULATED IN-GAME CHAT & HUD BACKGROUND ================= -->
+    <div id="mockGameHud" class="fixed inset-0 pointer-events-none z-0 overflow-hidden transition-opacity duration-300">
+        <!-- Top-Left SA-MP / GTA Chat Mockup -->
+        <div class="absolute top-4 left-5 space-y-1 text-xs font-mono text-zinc-300/40">
+            <p>105/111 bytes.</p>
+            <p class="text-zinc-200/55">รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello</p>
+            <p>[Система] Телефона можно закрыть клавишей ESC</p>
+            <p>Объявление: Продам дом №145 у Центрального Банка. Отправил: Сотрудник СМИ [SF]</p>
+            <p>98/111 bytes. bro is using 100b budget</p>
+        </div>
+
+        <!-- Bottom-Left Keybind Hints -->
+        <div class="absolute bottom-6 left-6 space-y-1.5 text-[11px] text-zinc-400/35 font-medium">
+            <div class="flex items-center gap-2"><span class="px-1.5 py-0.5 bg-amber-500/40 text-amber-200 rounded font-bold">B</span> <span>Battle Pass</span></div>
+            <div class="flex items-center gap-2"><span class="px-1.5 py-0.5 bg-zinc-700/60 text-zinc-300 rounded">R</span> <span>Меню анимаций</span></div>
+            <div class="flex items-center gap-2"><span class="px-1.5 py-0.5 bg-zinc-700/60 text-zinc-300 rounded">I</span> <span>Открыть инвентарь</span></div>
+            <div class="flex items-center gap-2"><span class="px-1.5 py-0.5 bg-zinc-700/60 text-zinc-300 rounded">P</span> <span>Телефон</span></div>
+        </div>
+    </div>
+
+    <!-- =========================================================================================
+         LIVE NOTIFICATION ANIMATION OVERLAYS (4 Distinct Non-Intrusive Styles)
+         ========================================================================================= -->
+
+    <!-- 1. TOP-CENTER FLOATING GAME PILL (Spring Pop + Animated SVG Checkmark) -->
+    <div id="topFloatingPillContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+    <!-- 2. LEFT-EDGE MINI HUD WHISPER (Subtle State Change Notification) -->
+    <div id="leftWhisperContainer" class="fixed top-28 left-5 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+    <!-- 3. BOTTOM-RIGHT STACKED SPRING TOASTS & INTERACTIVE UPDATE CARD -->
+    <div id="bottomRightToastStack" class="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2.5 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- =========================================================================================
+         TOP CONTROL DECK: 4 TEMPLATES + 4 NOTIFICATION ANIMATION TRIGGERS
+         ========================================================================================= -->
+    <nav class="z-30 w-full max-w-[1040px] mb-3.5 cef-surface rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2.5 shadow-xl">
+        <!-- Row 1: Template Switcher -->
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.07] pb-2.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-blue-400 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 mr-1">
+                    เลือกเทมเพลต UI
+                </span>
+                <button onclick="switchTemplate('classic')" id="tplBtn_classic" class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all bg-white text-zinc-950 shadow-sm">
+                    D · Classic ต้นฉบับอัปเกรด
+                </button>
+                <button onclick="switchTemplate('bento')" id="tplBtn_bento" class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all text-zinc-300 hover:text-white hover:bg-white/[0.06]">
+                    A · Bento Modular (การ์ดโมดูล)
+                </button>
+                <button onclick="switchTemplate('drawer')" id="tplBtn_drawer" class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all text-zinc-300 hover:text-white hover:bg-white/[0.06]">
+                    B · Side Drawer (แถบข้างจอเกม)
+                </button>
+                <button onclick="switchTemplate('imgui')" id="tplBtn_imgui" class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all text-zinc-300 hover:text-white hover:bg-white/[0.06]">
+                    C · Modern ImGui (กะทัดรัด)
+                </button>
+            </div>
+
+            <button onclick="toggleCefTransparency()" class="px-2.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 border border-white/[0.07] text-xs transition">
+                สลับฉากหลังเกม / CEF ใส
+            </button>
+        </div>
+
+        <!-- Row 2: Notification Animation Playground -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] font-medium text-zinc-400 mr-1 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-soft-pulse"></span>
+                    <span>ทดลองอนิเมชันแจ้งเตือน:</span>
+                </span>
+
+                <!-- Trigger 1: Interactive Script Update Card -->
+                <button onclick="spawnScriptUpdateNotification()" class="px-2.5 py-1.5 rounded-lg bg-amber-500/12 hover:bg-amber-500/20 text-amber-300 border border-amber-500/25 transition flex items-center gap-1.5 font-medium">
+                    <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>1. แจ้งเตือนอัปเดตสคริปต์</span>
+                </button>
+
+                <!-- Trigger 2: Floating Game Pill -->
+                <button onclick="spawnFloatingSendPill()" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/12 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/25 transition flex items-center gap-1.5 font-medium">
+                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>2. ส่งสำเร็จ (Floating Pill)</span>
+                </button>
+
+                <!-- Trigger 3: Budget Exceeded Shake + Warning -->
+                <button onclick="spawnOverBudgetWarning()" class="px-2.5 py-1.5 rounded-lg bg-rose-500/12 hover:bg-rose-500/20 text-rose-300 border border-rose-500/25 transition flex items-center gap-1.5 font-medium">
+                    <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>3. เตือนไบต์เกินเพดาน (Shake)</span>
+                </button>
+
+                <!-- Trigger 4: Mini HUD Whisper -->
+                <button onclick="spawnHudWhisper()" class="px-2.5 py-1.5 rounded-lg bg-blue-500/12 hover:bg-blue-500/20 text-blue-300 border border-blue-500/25 transition flex items-center gap-1.5 font-medium">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>4. สลับ Codec (HUD Whisper)</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================================================================================
+         MAIN WORKSPACE WRAPPER (Dynamically adapts to Template D, A, B, or C)
+         ========================================================================================= -->
+    <div id="workspaceStage" class="w-full max-w-[1040px] flex justify-center relative z-10 transition-all duration-300">
+
+        <!-- =====================================================================================
+             TEMPLATE D (DEFAULT): CLASSIC ORIGINAL REFINED + ANIMATED DIFF & INLINE UPDATER
+             ===================================================================================== -->
+        <section id="tplView_classic" class="cef-surface w-full rounded-2xl overflow-hidden relative">
+            <!-- Hot-reload Shimmer Sweep Effect Layer -->
+            <div id="hotReloadShimmer" class="hidden absolute inset-0 pointer-events-none z-40 shimmer-sweep-overlay"></div>
+
+            <!-- Header -->
+            <header class="px-6 py-4 border-b border-white/[0.07] flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">
+                            ThaiChatBridge <span class="text-zinc-400 font-semibold">/ Codec Lab</span>
+                        </h1>
+                        <span id="classicVerBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white/[0.06] text-zinc-300 border border-white/[0.07]">
+                            v2.4.2
+                        </span>
+
+                        <!-- Animated Script Update Pill -->
+                        <button id="inlineUpdateTriggerPill" onclick="spawnScriptUpdateNotification()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium transition">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-soft-pulse"></span>
+                            <span>มีอัปเดตสคริปต์ v2.5.0</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-zinc-400 mt-0.5">
+                        หน้าทดสอบชั่วคราว · เปิด-ปิดและเปรียบเทียบการบีบอัด
+                    </p>
+                </div>
+
+                <button onclick="closeCefUI()" class="w-9 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white transition" title="ปิดหน้าต่าง (Esc)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </header>
+
+            <!-- Body -->
+            <div class="p-5 sm:p-6 space-y-4">
+                <!-- Top Controls Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-2.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] cursor-pointer transition">
+                            <input type="checkbox" id="chkRealChat" checked onchange="syncGlobalToggles('real', this.checked)" class="clean-checkbox">
+                            <span class="text-xs sm:text-sm text-zinc-100 font-medium">ใช้กับการพิมพ์จริง</span>
+                        </label>
+
+                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] cursor-pointer transition">
+                            <input type="checkbox" id="chkTestSend" checked onchange="syncGlobalToggles('test', this.checked)" class="clean-checkbox">
+                            <span class="text-xs sm:text-sm text-zinc-100 font-medium">เปิดการส่งทดสอบ</span>
+                        </label>
+
+                        <button id="btnAutoClassic" onclick="setAutoSelection()" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition bg-white/[0.1] border-white/[0.16] text-white">
+                            Auto · เลือกตัวเล็กสุด
+                        </button>
+
+                        <span id="lblModeClassic" class="text-xs text-zinc-400 pl-1">Auto</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleAllCodecs(true)" class="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.07] text-xs sm:text-sm text-zinc-200 transition">
+                            เปิดทุกตัว
+                        </button>
+                        <button onclick="toggleAllCodecs(false)" class="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.07] text-xs sm:text-sm text-zinc-200 transition">
+                            ปิดทุกตัว
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dropdowns Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1.5">ข้อความตัวอย่าง</label>
+                        <div class="relative">
+                            <select id="presetSelectClassic" onchange="onPresetChange(this.value)" class="w-full appearance-none bg-zinc-900/90 hover:bg-zinc-900 text-zinc-100 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 pr-9 border border-white/[0.08] focus:border-blue-500/60 focus:outline-none transition">
+                                <option value="0">1 · ทักทายทั่วไป (สวัสดีครับทุกคน)</option>
+                                <option value="1" selected>2 · Thai + Hello</option>
+                                <option value="2">3 · ประโยคค้าขาย + ตัวเลข</option>
+                                <option value="3">4 · ประโยคยาวทดสอบเพดานไบต์</option>
+                                <option value="custom">กำหนดเอง (พิมพ์แก้ไขด้านล่าง)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1.5">ช่องที่ใช้ส่ง</label>
+                        <div class="relative">
+                            <select id="budgetSelectClassic" onchange="onBudgetChange(this.value)" class="w-full appearance-none bg-zinc-900/90 hover:bg-zinc-900 text-zinc-100 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 pr-9 border border-white/[0.08] focus:border-blue-500/60 focus:outline-none transition">
+                                <option value="111" selected>แชตปกติ · 111 bytes</option>
+                                <option value="96">แชต OOC (/b) · 96 bytes</option>
+                                <option value="85">ตะโกน (/s) · 85 bytes</option>
+                                <option value="64">วิทยุ (/r) · 64 bytes</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source Text Box -->
+                <div class="cef-card rounded-xl px-4 py-3 focus-within:border-blue-500/50 transition">
+                    <div class="flex items-center justify-between text-xs text-zinc-400 mb-1">
+                        <span>ต้นฉบับที่ใช้เปรียบเทียบ</span>
+                        <span id="classicSourceMeta" class="font-mono text-[11px] text-zinc-400">38 ตัวอักษร · Raw 88 bytes</span>
+                    </div>
+                    <input 
+                        id="inputSourceClassic"
+                        type="text"
+                        value="รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello"
+                        oninput="onSourceTextInput(this.value)"
+                        class="w-full bg-transparent text-zinc-100 font-medium text-sm sm:text-base focus:outline-none"
+                    />
+                </div>
+
+                <!-- 2-Column Main Content: Codec Table + Right Summary Card -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                    <!-- Left 8 Cols: Codec Table -->
+                    <div class="lg:col-span-8">
+                        <div class="overflow-hidden rounded-xl border border-white/[0.07] bg-zinc-950/35">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/[0.07] text-xs text-zinc-400 bg-white/[0.02]">
+                                        <th class="py-2.5 px-3.5 font-medium w-24">อนุญาตให้ส่ง</th>
+                                        <th class="py-2.5 px-3 font-medium">วิธีบีบอัด</th>
+                                        <th class="py-2.5 px-3 font-medium text-right w-28">รวม bytes</th>
+                                        <th class="py-2.5 px-3.5 font-medium text-right w-24">เลือกวิธีเดียว</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="classicTableBody" class="divide-y divide-white/[0.05] text-xs sm:text-sm"></tbody>
+                            </table>
+                        </div>
+                        <p class="text-xs text-zinc-400 mt-2.5">
+                            ขนาดรวมข้อความแทนและ carrier แล้ว · การเปลี่ยนตัวเลือกไม่ส่งข้อความ · ปุ่ม "บังคับ" จะไม่เปลี่ยนไปใช้วิธีอื่นหากเกินเพดาน
+                        </p>
+                    </div>
+
+                    <!-- Right 4 Cols: Result Summary Panel -->
+                    <div id="classicSummaryCard" class="lg:col-span-4 cef-card rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-4 transition-transform">
+                        <div>
+                            <div class="text-xs text-zinc-400">ผลที่จะส่ง</div>
+                            <h2 id="classicActiveName" class="text-base font-bold text-white mt-1">
+                                Thai Dictionary · Wide
+                            </h2>
+
+                            <div class="mt-3 flex items-baseline gap-1.5">
+                                <span id="classicActiveBytes" class="text-3xl sm:text-4xl font-bold font-mono tracking-tight text-white">
+                                    61
+                                </span>
+                                <span class="text-sm font-mono text-zinc-400">
+                                    / <span id="classicBudgetBytes">111</span> bytes
+                                </span>
+                            </div>
+
+                            <!-- Smooth Animated Progress Bar -->
+                            <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-2.5">
+                                <div id="classicProgressBar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 55%"></div>
+                            </div>
+
+                            <p id="classicFitLabel" class="mt-2.5 text-xs font-medium text-emerald-400">
+                                Fits the observed channel budget
+                            </p>
+
+                            <div class="mt-4 pt-3.5 border-t border-white/[0.07] space-y-1 text-xs">
+                                <p class="text-zinc-400">เครื่องที่ไม่มีตัวถอดจะเห็น</p>
+                                <p id="classicFallbackLabel" class="text-zinc-200 font-medium leading-relaxed">
+                                    สุ่ม 38 ประโยคที่พอดี · ตารางใช้ประโยคสั้นสุด
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 pt-1">
+                            <button onclick="triggerSendSingleCase()" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm transition shadow-sm">
+                                ส่งกรณีนี้ 1 ครั้ง
+                            </button>
+                            <button id="btnQueueClassic" onclick="toggleTestQueue()" class="w-full py-2.5 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.07] text-zinc-200 font-medium text-xs sm:text-sm transition">
+                                หยุดคิวทดสอบ
+                            </button>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/[0.07] space-y-1 text-xs text-zinc-400 font-mono">
+                            <div id="classicCalcStat">คำนวณ 1.21 ms · คิว 0 · รอ 0 วินาที</div>
+                            <div id="classicRealChatStat">Real chat ON · 0.00 ms</div>
+                            <div id="classicQueueStat">Queue stopped</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="px-6 py-3 bg-zinc-950/60 border-t border-white/[0.07] flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-soft-pulse"></span>
+                    <span class="text-zinc-300">เชื่อมกับ Lua แล้ว · เปลี่ยนตัวเลือกได้</span>
+                </div>
+                <div class="font-mono text-[11px] text-zinc-400">
+                    Esc ปิด · /thcodecui เปิดอีกครั้ง
+                </div>
+            </footer>
+        </section>
+
+        <!-- =====================================================================================
+             TEMPLATE A: BENTO MODULAR DASHBOARD (Visual Gauge + Codec Grid Cards + Update Bento)
+             ===================================================================================== -->
+        <section id="tplView_bento" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+            <!-- Top Bento Header Bar (12 Cols) -->
+            <div class="lg:col-span-12 cef-surface rounded-2xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-white">ThaiChatBridge · Bento Studio</h2>
+                        <p class="text-xs text-zinc-400">เลย์เอาต์แบบการ์ดแยกส่วน ดูค่าไบต์และอัปเดตสคริปต์ได้ในมุมมองเดียว</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="setAutoSelection()" class="px-3 py-1.5 rounded-xl bg-blue-500/15 text-blue-300 border border-blue-500/30 text-xs font-medium">
+                        Auto · เลือกตัวเล็กสุด
+                    </button>
+                    <button onclick="toggleAllCodecs(true)" class="px-2.5 py-1.5 rounded-xl bg-white/[0.05] text-zinc-300 text-xs">เปิดทุกตัว</button>
+                    <button onclick="toggleAllCodecs(false)" class="px-2.5 py-1.5 rounded-xl bg-white/[0.05] text-zinc-300 text-xs">ปิดทุกตัว</button>
+                </div>
+            </div>
+
+            <!-- Left 4 Cols: Radial Gauge Card + Live Script Update Card -->
+            <div class="lg:col-span-4 flex flex-col gap-3.5">
+                <!-- Radial Ring Byte Gauge Bento -->
+                <div class="cef-surface rounded-2xl p-5 flex flex-col items-center text-center relative overflow-hidden">
+                    <span class="text-xs text-zinc-400">ผลที่จะส่ง (Radial Budget Gauge)</span>
+                    <h3 id="bentoActiveCodec" class="text-sm font-bold text-blue-400 mt-1">Thai Dictionary · Wide</h3>
+
+                    <!-- SVG Circular Gauge -->
+                    <div class="relative w-36 h-36 my-3 flex items-center justify-center">
+                        <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.07)" stroke-width="9" fill="none"/>
+                            <circle id="bentoRingCircle" cx="60" cy="60" r="50" stroke="#10b981" stroke-width="9" stroke-linecap="round" fill="none" stroke-dasharray="314" stroke-dashoffset="141" class="transition-all duration-500"/>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="bentoByteNum" class="text-3xl font-bold font-mono text-white">61</span>
+                            <span class="text-[11px] font-mono text-zinc-400">/ <span id="bentoBudgetNum">111</span> B</span>
+                        </div>
+                    </div>
+
+                    <p id="bentoFitStatus" class="text-xs font-medium text-emerald-400 mb-3">
+                        Fits the observed channel budget
+                    </p>
+
+                    <button onclick="triggerSendSingleCase()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition">
+                        ส่งกรณีนี้ 1 ครั้ง
+                    </button>
+                </div>
+
+                <!-- Dedicated Script Update Bento Card -->
+                <div class="cef-surface rounded-2xl p-4 space-y-3 border border-amber-500/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-soft-pulse"></span>
+                            <span class="text-xs font-semibold text-white">อัปเดตสคริปต์ OTA</span>
+                        </div>
+                        <span id="bentoUpdateBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300">v2.5.0 พร้อมติดตั้ง</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        อัปเกรดพจนานุกรม <span class="text-zinc-200 font-medium">Thai Dictionary · Wide</span> บีบอัดประโยคไทยเล็กลงอีก 6 bytes
+                    </p>
+                    <button onclick="applyOtaScriptUpdate()" id="bentoUpdateBtn" class="w-full py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-medium text-xs transition">
+                        ติดตั้งและ Hot-Reload ทันที
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right 8 Cols: Source Editor + 2-Column Codec Grid Cards -->
+            <div class="lg:col-span-8 cef-surface rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input 
+                            id="inputSourceBento"
+                            type="text"
+                            value="รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello"
+                            oninput="onSourceTextInput(this.value)"
+                            class="w-full bg-zinc-900/90 border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500"
+                        />
+                        <select onchange="onBudgetChange(this.value)" id="budgetSelectBento" class="bg-zinc-900/90 border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-zinc-200">
+                            <option value="111">แชตปกติ · 111 bytes</option>
+                            <option value="96">แชต OOC (/b) · 96 bytes</option>
+                            <option value="85">ตะโกน (/s) · 85 bytes</option>
+                            <option value="64">วิทยุ (/r) · 64 bytes</option>
+                        </select>
+                    </div>
+
+                    <!-- 10 Codecs as 2-Column Interactive Bento Cards -->
+                    <div id="bentoCodecGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1"></div>
+                </div>
+
+                <div class="pt-3 border-t border-white/[0.07] flex items-center justify-between text-xs text-zinc-400 font-mono">
+                    <span>เชื่อมกับ Lua แล้ว · Real chat ON</span>
+                    <span>Esc ปิด · /thcodecui เปิดอีกครั้ง</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================================
+             TEMPLATE B: SIDE DRAWER INSPECTOR (Leaves 70% of Game Screen Visible for Playing)
+             ===================================================================================== -->
+        <section id="tplView_drawer" class="hidden w-full flex justify-end">
+            <div class="cef-surface w-full max-w-[390px] rounded-2xl p-4 sm:p-5 space-y-4 border-r-2 border-r-blue-500/40">
+                <div class="flex items-center justify-between border-b border-white/[0.07] pb-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-soft-pulse"></span>
+                            <h2 class="text-sm font-bold text-white">ThaiChatBridge · Side Inspector</h2>
+                        </div>
+                        <p class="text-[11px] text-zinc-400 mt-0.5">โหมดแถบข้างจอ มองเห็นตัวเกมด้านซ้ายได้ชัดเจน</p>
+                    </div>
+                    <button onclick="spawnScriptUpdateNotification()" class="px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[11px] font-mono">
+                        v2.5.0 ↑
+                    </button>
+                </div>
+
+                <!-- Compact Hero Byte Card -->
+                <div class="cef-card rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span id="drawerCodecTitle" class="text-xs font-semibold text-blue-400">Thai Dictionary · Wide</span>
+                        <button onclick="setAutoSelection()" class="text-[11px] px-2 py-0.5 rounded bg-white/[0.07] text-zinc-200">Auto</button>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <div class="flex items-baseline gap-1">
+                            <span id="drawerByteVal" class="text-2xl font-bold font-mono text-white">61</span>
+                            <span class="text-xs font-mono text-zinc-400">/ <span id="drawerBudgetVal">111</span> bytes</span>
+                        </div>
+                        <span id="drawerFitBadge" class="text-[11px] text-emerald-400 font-medium">Fits budget</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div id="drawerBar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 55%"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Input -->
+                <div class="space-y-1.5">
+                    <label class="text-[11px] text-zinc-400">ข้อความเปรียบเทียบ (แก้ไขได้ทันที)</label>
+                    <input 
+                        id="inputSourceDrawer"
+                        type="text"
+                        value="รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello"
+                        oninput="onSourceTextInput(this.value)"
+                        class="w-full bg-zinc-900/90 border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    />
+                </div>
+
+                <!-- Scrollable Compact Codec List -->
+                <div id="drawerCodecList" class="max-h-[260px] overflow-y-auto space-y-1 pr-1"></div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="triggerSendSingleCase()" class="py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition">
+                        ส่งกรณีนี้ 1 ครั้ง
+                    </button>
+                    <button onclick="toggleTestQueue()" class="py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 text-xs transition">
+                        หยุดคิวทดสอบ
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================================
+             TEMPLATE C: MODERN DEAR IMGUI EVOLVED (Ultra-Crisp SA-MP / MoonLoader Mod Menu Style)
+             ===================================================================================== -->
+        <section id="tplView_imgui" class="hidden w-full max-w-[760px] imgui-surface rounded-lg overflow-hidden font-mono text-xs">
+            <!-- ImGui Title Bar -->
+            <div class="bg-[#1b2230] px-3.5 py-2 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-blue-400">▼</span>
+                    <span class="font-bold text-zinc-100">ThaiChatBridge / Codec Lab [MoonLoader CEF v2.4.2]</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="spawnScriptUpdateNotification()" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px]">
+                        [OTA Update v2.5.0]
+                    </button>
+                    <button onclick="closeCefUI()" class="text-zinc-400 hover:text-white px-1">✕</button>
+                </div>
+            </div>
+
+            <div class="p-3.5 space-y-3">
+                <!-- Collapsible Header 1: Configuration -->
+                <div class="bg-[#181c24] border border-white/[0.08] rounded p-2.5 space-y-2">
+                    <div class="text-[11px] text-blue-400 font-semibold uppercase tracking-wider">:: ENGINE CONFIGURATION</div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" id="chkImGuiReal" checked onchange="syncGlobalToggles('real', this.checked)" class="clean-checkbox">
+                            <span>ใช้กับการพิมพ์จริง</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" id="chkImGuiTest" checked onchange="syncGlobalToggles('test', this.checked)" class="clean-checkbox">
+                            <span>เปิดการส่งทดสอบ</span>
+                        </label>
+                        <button onclick="setAutoSelection()" class="px-2.5 py-1 bg-blue-600/25 border border-blue-500/40 text-blue-300 rounded">
+                            [Auto · เลือกตัวเล็กสุด]
+                        </button>
+                        <button onclick="toggleAllCodecs(true)" class="px-2 py-1 bg-white/[0.05] rounded text-zinc-300">เปิดทุกตัว</button>
+                        <button onclick="toggleAllCodecs(false)" class="px-2 py-1 bg-white/[0.05] rounded text-zinc-300">ปิดทุกตัว</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                        <input 
+                            id="inputSourceImGui"
+                            type="text"
+                            value="รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello"
+                            oninput="onSourceTextInput(this.value)"
+                            class="sm:col-span-2 bg-black/50 border border-white/10 rounded px-2.5 py-1.5 text-zinc-100 focus:outline-none focus:border-blue-400"
+                        />
+                        <select onchange="onBudgetChange(this.value)" id="budgetSelectImGui" class="bg-black/50 border border-white/10 rounded px-2.5 py-1.5 text-zinc-200">
+                            <option value="111">Budget: 111 bytes</option>
+                            <option value="96">Budget: 96 bytes</option>
+                            <option value="85">Budget: 85 bytes</option>
+                            <option value="64">Budget: 64 bytes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ImGui High-Density Codec Table + Inline Byte Bars -->
+                <div class="bg-[#14171e] border border-white/[0.08] rounded overflow-hidden">
+                    <div id="imguiCodecRows" class="divide-y divide-white/[0.05]"></div>
+                </div>
+
+                <!-- ImGui Bottom Status & Action Bar -->
+                <div class="bg-[#181c24] border border-white/[0.08] rounded p-2.5 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <span class="text-zinc-400">Selected:</span>
+                        <strong id="imguiSelectedName" class="text-emerald-400 ml-1">Thai Dictionary · Wide</strong>
+                        <span id="imguiSelectedBytes" class="ml-2 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">61 / 111 B</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="triggerSendSingleCase()" class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+                            ส่งกรณีนี้ 1 ครั้ง
+                        </button>
+                        <button onclick="toggleTestQueue()" class="px-3 py-1.5 rounded bg-white/[0.07] hover:bg-white/[0.12] text-zinc-200">
+                            หยุดคิวทดสอบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ================= CORE LOGIC, MULTI-TEMPLATE RENDERER & ANIMATION ENGINE ================= -->
+    <script>
+        const PRESET_TEXTS = [
+            "สวัสดีครับทุกคน มีใครอยู่แถวสถานีตำรวจไหมครับ",
+            "รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello",
+            "รับซื้อแร่เหล็กและทองคำจำนวนมาก ติดต่อด่วนที่เบอร์ 8899 ครับ",
+            "ประกาศรวมพลที่หน้าคลังสินค้าท่าเรือตอนสองทุ่มตรง เตรียมยาและเกราะให้พร้อมนะครับทุกคน"
+        ];
+
+        const EXACT_SCREENSHOT_TEXT = "รออยู่หน้าธนาคารนะครับ อีกห้านาทีเจอกัน Hello";
+
+        // All 10 Codecs matching the user's screenshot
+        const CODECS = [
+            { id: 'raw',          name: 'Raw / ไม่บีบอัด',          enabled: true, refBytes: 88, ratio: 1.00, overhead: 0 },
+            { id: 'arith0',       name: 'Arithmetic Order-0',       enabled: true, refBytes: 69, ratio: 0.75, overhead: 3 },
+            { id: 'lzw',          name: 'LZW',                      enabled: true, refBytes: 96, ratio: 1.06, overhead: 3 },
+            { id: 'static_dict',  name: 'Static Dictionary',        enabled: true, refBytes: 81, ratio: 0.89, overhead: 3 },
+            { id: 'unishox_def',  name: 'Unishox2 · default',       enabled: true, refBytes: 93, ratio: 1.02, overhead: 3 },
+            { id: 'unishox_dic',  name: 'Unishox2 · dictionary',    enabled: true, refBytes: 93, ratio: 1.02, overhead: 3 },
+            { id: 'unishox_nod',  name: 'Unishox2 · no dictionary', enabled: true, refBytes: 91, ratio: 1.00, overhead: 3 },
+            { id: 'th_dict_v1',   name: 'Thai Dictionary · V1',     enabled: true, refBytes: 73, ratio: 0.80, overhead: 3 },
+            { id: 'th_dict_v2',   name: 'Thai Dictionary · V2',     enabled: true, refBytes: 73, ratio: 0.80, overhead: 3 },
+            { id: 'th_dict_wide', name: 'Thai Dictionary · Wide',   enabled: true, refBytes: 61, ratio: 0.65, overhead: 4 }
+        ];
+
+        let appState = {
+            template: 'classic',
+            text: EXACT_SCREENSHOT_TEXT,
+            budget: 111,
+            mode: 'auto', // 'auto' | 'forced'
+            forcedId: null,
+            selectedId: 'th_dict_wide',
+            realChat: true,
+            testSend: true,
+            queueRunning: false,
+            scriptUpdated: false,
+            displayedBytes: 61
+        };
+
+        // CEF Bridge Emitter
+        function emitCef(event, payload) {
+            if (window.cef && typeof window.cef.emit === 'function') {
+                window.cef.emit(event, JSON.stringify(payload));
+            }
+        }
+
+        // Compute realistic byte sizes
+        function computeCodecBytes(codec, text) {
+            if (!text || text.length === 0) return 0;
+            if (text === EXACT_SCREENSHOT_TEXT) {
+                if (appState.scriptUpdated && codec.id === 'th_dict_wide') return 55;
+                return codec.refBytes;
+            }
+            let th = 0, other = 0;
+            for (let i = 0; i < text.length; i++) {
+                const code = text.charCodeAt(i);
+                if (code >= 0x0E00 && code <= 0x0E7F) th++;
+                else other++;
+            }
+            const raw = Math.max(4, Math.round(th * 2.15 + other * 1.0 + 4));
+            if (codec.id === 'raw') return raw;
+            const otaBonus = (appState.scriptUpdated && codec.id.startsWith('th_dict')) ? 0.91 : 1.0;
+            const thBonus = th > 8 ? 0.94 : 1.02;
+            return Math.max(6, Math.round(raw * codec.ratio * thBonus * otaBonus + codec.overhead));
+        }
+
+        // Smooth number counter animation
+        let counterAnimFrame = null;
+        function animateByteCounter(targetVal) {
+            cancelAnimationFrame(counterAnimFrame);
+            const startVal = appState.displayedBytes;
+            const diff = targetVal - startVal;
+            if (diff === 0) {
+                updateByteTextNodes(targetVal);
+                return;
+            }
+            const duration = 220;
+            const startTime = performance.now();
+
+            function step(now) {
+                const progress = Math.min(1, (now - startTime) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const cur = Math.round(startVal + diff * eased);
+                updateByteTextNodes(cur);
+                if (progress < 1) {
+                    counterAnimFrame = requestAnimationFrame(step);
+                } else {
+                    appState.displayedBytes = targetVal;
+                }
+            }
+            counterAnimFrame = requestAnimationFrame(step);
+        }
+
+        function updateByteTextNodes(val) {
+            ['classicActiveBytes', 'bentoByteNum', 'drawerByteVal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            });
+        }
+
+        // Recalculate and update all 4 templates simultaneously
+        function refreshAllViews() {
+            const t0 = performance.now();
+            const prevSelected = appState.selectedId;
+
+            CODECS.forEach(c => {
+                c.bytes = computeCodecBytes(c, appState.text);
+            });
+
+            let chosen = null;
+            if (appState.mode === 'forced' && appState.forcedId) {
+                chosen = CODECS.find(c => c.id === appState.forcedId);
+            }
+            if (!chosen) {
+                const enabledList = CODECS.filter(c => c.enabled);
+                chosen = enabledList.length > 0
+                    ? enabledList.reduce((best, cur) => cur.bytes < best.bytes ? cur : best, enabledList[0])
+                    : CODECS[0];
+            }
+            appState.selectedId = chosen.id;
+
+            // If auto mode switched codec automatically, show subtle HUD whisper
+            if (prevSelected && prevSelected !== chosen.id && appState.mode === 'auto') {
+                spawnHudWhisper(`สลับเป็น ${chosen.name} (${chosen.bytes} B)`);
+            }
+
+            const calcMs = Math.max(0.65, (performance.now() - t0) + 0.95).toFixed(2);
+            animateByteCounter(chosen.bytes);
+
+            renderClassicView(chosen, calcMs);
+            renderBentoView(chosen);
+            renderDrawerView(chosen);
+            renderImGuiView(chosen);
+        }
+
+        // 1. Render Classic Refined View
+        function renderClassicView(active, calcMs) {
+            const tbody = document.getElementById('classicTableBody');
+            const budget = appState.budget;
+
+            tbody.innerHTML = CODECS.map(c => {
+                const isSel = c.id === appState.selectedId;
+                const isForced = appState.mode === 'forced' && appState.forcedId === c.id;
+                const over = c.bytes > budget;
+                const barW = Math.min(100, Math.max(6, Math.round((c.bytes / budget) * 100)));
+
+                return `
+                    <tr class="transition-colors ${isSel ? 'row-active-highlight' : 'hover:bg-white/[0.03]'} ${!c.enabled && !isForced ? 'opacity-40' : ''}">
+                        <td class="py-2.5 px-3.5">
+                            <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleSingleCodec('${c.id}', this.checked)" class="clean-checkbox"/>
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <div class="flex items-center gap-2">
+                                <span class="${isSel ? 'text-white font-semibold' : 'text-zinc-200'}">${c.name}</span>
+                                ${isSel ? `<span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">เลือกอยู่</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-3 text-right">
+                            <div class="inline-flex items-center justify-end gap-2.5 w-full">
+                                <div class="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
+                                    <div class="h-full transition-all duration-300 ${over ? 'bg-rose-400' : (isSel ? 'bg-blue-400' : 'bg-zinc-600')}" style="width:${barW}%"></div>
+                                </div>
+                                <span class="font-mono ${over ? 'text-rose-400 font-semibold' : (isSel ? 'text-white font-bold' : 'text-zinc-300')}">${c.bytes}</span>
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-3.5 text-right">
+                            <button onclick="forceCodec('${c.id}')" class="px-2.5 py-1 rounded-lg text-xs font-medium border transition ${isForced ? 'bg-blue-600 text-white border-blue-500' : 'bg-white/[0.04] hover:bg-white/[0.09] text-zinc-300 border-white/[0.08]'}">
+                                บังคับ
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const over = active.bytes > budget;
+            const pct = Math.min(100, Math.max(4, Math.round((active.bytes / budget) * 100)));
+
+            document.getElementById('classicSourceMeta').textContent = `${appState.text.length} ตัวอักษร · Raw ${CODECS[0].bytes} bytes`;
+            document.getElementById('classicActiveName').textContent = active.name;
+            document.getElementById('classicBudgetBytes').textContent = budget;
+
+            const bar = document.getElementById('classicProgressBar');
+            const fit = document.getElementById('classicFitLabel');
+            bar.style.width = `${pct}%`;
+
+            if (!over) {
+                bar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-300';
+                fit.className = 'mt-2.5 text-xs font-medium text-emerald-400';
+                fit.textContent = 'Fits the observed channel budget';
+            } else {
+                bar.className = 'h-full bg-rose-500 rounded-full transition-all duration-300';
+                fit.className = 'mt-2.5 text-xs font-medium text-rose-400';
+                fit.textContent = `Exceeds channel budget by ${active.bytes - budget} bytes`;
+            }
+
+            document.getElementById('lblModeClassic').textContent = appState.mode === 'auto' ? 'Auto' : `บังคับ · ${active.name}`;
+            document.getElementById('classicFallbackLabel').textContent = `สุ่ม ${Math.max(12, appState.text.length)} ประโยคที่พอดี · ตารางใช้ประโยคสั้นสุด`;
+            document.getElementById('classicCalcStat').textContent = `คำนวณ ${calcMs} ms · คิว ${appState.queueRunning ? 3 : 0} · รอ 0 วินาที`;
+            document.getElementById('classicRealChatStat').textContent = `Real chat ${appState.realChat ? 'ON' : 'OFF'} · 0.00 ms`;
+        }
+
+        // 2. Render Bento Modular View
+        function renderBentoView(active) {
+            const budget = appState.budget;
+            const over = active.bytes > budget;
+            const ratio = Math.min(1, active.bytes / budget);
+            const dashOffset = Math.round(314 * (1 - ratio));
+
+            document.getElementById('bentoActiveCodec').textContent = active.name;
+            document.getElementById('bentoBudgetNum').textContent = budget;
+            const ring = document.getElementById('bentoRingCircle');
+            ring.style.strokeDashoffset = dashOffset;
+            ring.setAttribute('stroke', over ? '#f43f5e' : '#10b981');
+
+            const fit = document.getElementById('bentoFitStatus');
+            fit.textContent = over ? `เกินเพดาน ${active.bytes - budget} bytes` : 'Fits the observed channel budget';
+            fit.className = `text-xs font-medium mb-3 ${over ? 'text-rose-400' : 'text-emerald-400'}`;
+
+            const grid = document.getElementById('bentoCodecGrid');
+            grid.innerHTML = CODECS.map(c => {
+                const isSel = c.id === appState.selectedId;
+                const cOver = c.bytes > budget;
+                return `
+                    <div onclick="forceCodec('${c.id}')" class="cursor-pointer p-3 rounded-xl border transition-all flex items-center justify-between ${isSel ? 'bg-blue-500/12 border-blue-500/40 shadow-sm' : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.07]'}">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <input type="checkbox" ${c.enabled ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleSingleCodec('${c.id}', this.checked)" class="clean-checkbox"/>
+                            <div class="truncate">
+                                <div class="text-xs font-medium ${isSel ? 'text-white font-semibold' : 'text-zinc-200'} truncate">${c.name}</div>
+                                <div class="text-[10px] ${isSel ? 'text-emerald-400' : 'text-zinc-500'}">${isSel ? '● เลือกอยู่' : 'คลิกเพื่อบังคับใช้'}</div>
+                            </div>
+                        </div>
+                        <span class="font-mono text-sm font-bold ${cOver ? 'text-rose-400' : (isSel ? 'text-blue-400' : 'text-zinc-300')}">${c.bytes} B</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 3. Render Side Drawer View
+        function renderDrawerView(active) {
+            const budget = appState.budget;
+            const over = active.bytes > budget;
+            const pct = Math.min(100, Math.round((active.bytes / budget) * 100));
+
+            document.getElementById('drawerCodecTitle').textContent = active.name;
+            document.getElementById('drawerBudgetVal').textContent = budget;
+            document.getElementById('drawerBar').style.width = `${pct}%`;
+            document.getElementById('drawerBar').className = `h-full rounded-full transition-all duration-300 ${over ? 'bg-rose-500' : 'bg-emerald-500'}`;
+            document.getElementById('drawerFitBadge').textContent = over ? `Over +${active.bytes - budget}B` : 'Fits budget';
+            document.getElementById('drawerFitBadge').className = `text-[11px] font-medium ${over ? 'text-rose-400' : 'text-emerald-400'}`;
+
+            const list = document.getElementById('drawerCodecList');
+            list.innerHTML = CODECS.map(c => {
+                const isSel = c.id === appState.selectedId;
+                return `
+                    <div class="flex items-center justify-between px-3 py-2 rounded-lg text-xs ${isSel ? 'bg-blue-500/15 border border-blue-500/30 text-white' : 'bg-white/[0.02] hover:bg-white/[0.05] text-zinc-300'}">
+                        <div class="flex items-center gap-2 truncate">
+                            <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleSingleCodec('${c.id}', this.checked)" class="clean-checkbox"/>
+                            <span class="truncate">${c.name}</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="font-mono font-semibold">${c.bytes}B</span>
+                            <button onclick="forceCodec('${c.id}')" class="px-2 py-0.5 rounded bg-white/[0.07] hover:bg-white/[0.15] text-[10px]">บังคับ</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 4. Render Modern ImGui View
+        function renderImGuiView(active) {
+            const budget = appState.budget;
+            document.getElementById('imguiSelectedName').textContent = active.name;
+            document.getElementById('imguiSelectedBytes').textContent = `${active.bytes} / ${budget} B`;
+
+            const rows = document.getElementById('imguiCodecRows');
+            rows.innerHTML = CODECS.map(c => {
+                const isSel = c.id === appState.selectedId;
+                const pct = Math.min(100, Math.round((c.bytes / budget) * 100));
+                const over = c.bytes > budget;
+                return `
+                    <div class="px-3 py-1.5 flex items-center justify-between gap-3 ${isSel ? 'bg-blue-500/15 text-white' : 'hover:bg-white/[0.03] text-zinc-300'}">
+                        <div class="flex items-center gap-2.5 min-w-[200px]">
+                            <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleSingleCodec('${c.id}', this.checked)" class="clean-checkbox"/>
+                            <span>${c.name}</span>
+                            ${isSel ? `<span class="text-[10px] text-emerald-400">[ACTIVE]</span>` : ''}
+                        </div>
+                        <div class="flex-1 max-w-[180px] h-2 bg-black/60 rounded overflow-hidden border border-white/10">
+                            <div class="h-full ${over ? 'bg-rose-500' : (isSel ? 'bg-emerald-400' : 'bg-blue-500/60')}" style="width:${pct}%"></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-12 text-right font-bold ${over ? 'text-rose-400' : ''}">${c.bytes} B</span>
+                            <button onclick="forceCodec('${c.id}')" class="px-2 py-0.5 rounded bg-white/[0.06] hover:bg-white/[0.14] text-[11px]">บังคับ</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ================= TEMPLATE SWITCHING =================
+        function switchTemplate(tpl) {
+            appState.template = tpl;
+            ['classic', 'bento', 'drawer', 'imgui'].forEach(id => {
+                const view = document.getElementById('tplView_' + id);
+                const btn = document.getElementById('tplBtn_' + id);
+                if (id === tpl) {
+                    view.classList.remove('hidden');
+                    btn.className = 'px-3 py-1.5 rounded-xl text-xs font-medium transition-all bg-white text-zinc-950 shadow-sm';
+                } else {
+                    view.classList.add('hidden');
+                    btn.className = 'px-3 py-1.5 rounded-xl text-xs font-medium transition-all text-zinc-300 hover:text-white hover:bg-white/[0.06]';
+                }
+            });
+            const names = {
+                classic: 'Classic ต้นฉบับอัปเกรด',
+                bento: 'Bento Modular Dashboard',
+                drawer: 'Side Drawer ข้างจอเกม',
+                imgui: 'Modern ImGui กะทัดรัด'
+            };
+            spawnHudWhisper(`สลับเทมเพลต: ${names[tpl]}`);
+        }
+
+        // ================= SHARED INTERACTION HANDLERS =================
+        function onSourceTextInput(val) {
+            appState.text = val;
+            ['inputSourceClassic', 'inputSourceBento', 'inputSourceDrawer', 'inputSourceImGui'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.value !== val) el.value = val;
+            });
+            document.getElementById('presetSelectClassic').value = 'custom';
+            refreshAllViews();
+        }
+
+        function onPresetChange(val) {
+            if (val !== 'custom') {
+                const preset = PRESET_TEXTS[parseInt(val, 10)] || EXACT_SCREENSHOT_TEXT;
+                onSourceTextInput(preset);
+                document.getElementById('presetSelectClassic').value = val;
+            }
+        }
+
+        function onBudgetChange(val) {
+            appState.budget = parseInt(val, 10) || 111;
+            ['budgetSelectClassic', 'budgetSelectBento', 'budgetSelectImGui'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = String(appState.budget);
+            });
+            refreshAllViews();
+        }
+
+        function toggleSingleCodec(id, checked) {
+            const c = CODECS.find(item => item.id === id);
+            if (c) c.enabled = checked;
+            emitCef('thcodec:toggle', { id, enabled: checked });
+            refreshAllViews();
+        }
+
+        function toggleAllCodecs(enabled) {
+            CODECS.forEach(c => c.enabled = enabled);
+            emitCef('thcodec:toggle_all', { enabled });
+            refreshAllViews();
+            spawnHudWhisper(enabled ? 'เปิดวิธีบีบอัดทั้งหมดแล้ว' : 'ปิดวิธีบีบอัดทั้งหมดแล้ว');
+        }
+
+        function forceCodec(id) {
+            if (appState.mode === 'forced' && appState.forcedId === id) {
+                setAutoSelection();
+                return;
+            }
+            appState.mode = 'forced';
+            appState.forcedId = id;
+            emitCef('thcodec:force', { id });
+            refreshAllViews();
+
+            const chosen = CODECS.find(c => c.id === id);
+            if (chosen && chosen.bytes > appState.budget) {
+                spawnOverBudgetWarning();
+            } else if (chosen) {
+                spawnHudWhisper(`บังคับใช้: ${chosen.name} (${chosen.bytes} B)`);
+            }
+        }
+
+        function setAutoSelection() {
+            appState.mode = 'auto';
+            appState.forcedId = null;
+            emitCef('thcodec:auto', {});
+            refreshAllViews();
+            spawnHudWhisper('เปิดโหมด Auto · เลือกตัวเล็กสุด');
+        }
+
+        function syncGlobalToggles(type, checked) {
+            if (type === 'real') {
+                appState.realChat = checked;
+                document.getElementById('chkRealChat').checked = checked;
+                document.getElementById('chkImGuiReal').checked = checked;
+            } else {
+                appState.testSend = checked;
+                document.getElementById('chkTestSend').checked = checked;
+                document.getElementById('chkImGuiTest').checked = checked;
+            }
+            refreshAllViews();
+        }
+
+        function triggerSendSingleCase() {
+            const active = CODECS.find(c => c.id === appState.selectedId) || CODECS[0];
+            if (active.bytes > appState.budget) {
+                spawnOverBudgetWarning();
+                return;
+            }
+            emitCef('thcodec:send_once', { codec: active.id, bytes: active.bytes, text: appState.text });
+            spawnFloatingSendPill(active);
+        }
+
+        function toggleTestQueue() {
+            appState.queueRunning = !appState.queueRunning;
+            const qStat = document.getElementById('classicQueueStat');
+            const qBtn = document.getElementById('btnQueueClassic');
+            if (appState.queueRunning) {
+                qStat.textContent = 'Queue running (3 items)';
+                qStat.className = 'text-emerald-400';
+                qBtn.textContent = 'หยุดคิวทดสอบ (กำลังรัน...)';
+                spawnHudWhisper('เริ่มรันคิวทดสอบแล้ว');
+            } else {
+                qStat.textContent = 'Queue stopped';
+                qStat.className = 'text-zinc-400';
+                qBtn.textContent = 'หยุดคิวทดสอบ';
+                spawnHudWhisper('หยุดคิวทดสอบแล้ว');
+            }
+            refreshAllViews();
+        }
+
+        // =========================================================================================
+        // 4 DISTINCT NOTIFICATION ANIMATION SYSTEMS
+        // =========================================================================================
+
+        // 1. Interactive OTA Script Update Card (Slide-in Right + Live Progress + Shimmer Hot-Reload)
+        function spawnScriptUpdateNotification() {
+            const stack = document.getElementById('bottomRightToastStack');
+            const existing = document.getElementById('liveOtaUpdateCard');
+            if (existing) existing.remove();
+
+            const card = document.createElement('div');
+            card.id = 'liveOtaUpdateCard';
+            card.className = 'pointer-events-auto w-full cef-surface rounded-2xl p-4 border border-amber-500/35 shadow-2xl anim-toast-in space-y-3';
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-bold text-white">อัปเดตสคริปต์ใหม่ v2.5.0</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">OTA</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-400">Thai Dictionary · Wide บีบอัดเล็กลงเหลือ 55 bytes</p>
+                        </div>
+                    </div>
+                    <button onclick="this.closest('#liveOtaUpdateCard').remove()" class="text-zinc-400 hover:text-white text-xs px-1">✕</button>
+                </div>
+
+                <div id="otaCardProgressWrap" class="hidden space-y-1.5">
+                    <div class="flex justify-between text-[11px] font-mono text-zinc-300">
+                        <span id="otaCardStepText">กำลังดาวน์โหลดพจนานุกรม...</span>
+                        <span id="otaCardPctText">0%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div id="otaCardBar" class="h-full bg-amber-400 rounded-full transition-all duration-300" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div id="otaCardActions" class="flex items-center gap-2 pt-0.5">
+                    <button onclick="applyOtaScriptUpdate()" class="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-xs transition">
+                        อัปเดตและรีโหลดทันที
+                    </button>
+                    <button onclick="this.closest('#liveOtaUpdateCard').remove()" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 text-xs transition">
+                        ไว้ทีหลัง
+                    </button>
+                </div>
+            `;
+            stack.appendChild(card);
+        }
+
+        function applyOtaScriptUpdate() {
+            const progWrap = document.getElementById('otaCardProgressWrap');
+            const actions = document.getElementById('otaCardActions');
+            if (progWrap && actions) {
+                progWrap.classList.remove('hidden');
+                actions.classList.add('hidden');
+            }
+
+            const steps = [
+                { pct: 45, msg: 'กำลังดาวน์โหลด ThaiChatBridge v2.5.0...' },
+                { pct: 85, msg: 'กำลังตรวจสอบตารางคำศัพท์และ Hot-Reload...' },
+                { pct: 100, msg: 'อัปเดตสำเร็จ! บีบอัดเหลือ 55 bytes' }
+            ];
+            let idx = 0;
+            const timer = setInterval(() => {
+                if (idx < steps.length) {
+                    const bar = document.getElementById('otaCardBar');
+                    const pct = document.getElementById('otaCardPctText');
+                    const txt = document.getElementById('otaCardStepText');
+                    if (bar) bar.style.width = steps[idx].pct + '%';
+                    if (pct) pct.textContent = steps[idx].pct + '%';
+                    if (txt) txt.textContent = steps[idx].msg;
+                    idx++;
+                } else {
+                    clearInterval(timer);
+                    appState.scriptUpdated = true;
+                    document.getElementById('classicVerBadge').textContent = 'v2.5.0';
+                    document.getElementById('inlineUpdateTriggerPill').classList.add('hidden');
+                    document.getElementById('bentoUpdateBadge').textContent = 'v2.5.0 ติดตั้งแล้ว';
+                    document.getElementById('bentoUpdateBtn').textContent = 'สคริปต์เป็นเวอร์ชันล่าสุดแล้ว';
+
+                    // Play smooth shimmer sweep across window
+                    const shimmer = document.getElementById('hotReloadShimmer');
+                    shimmer.classList.remove('hidden');
+                    setTimeout(() => shimmer.classList.add('hidden'), 950);
+
+                    const card = document.getElementById('liveOtaUpdateCard');
+                    if (card) setTimeout(() => card.remove(), 900);
+
+                    refreshAllViews();
+                    spawnFloatingSendPill({ name: 'อัปเดต v2.5.0 สำเร็จ', bytes: 55 });
+                }
+            }, 480);
+        }
+
+        // 2. Top-Center Floating Game Pill (Spring Pop + Animated SVG Checkmark Draw)
+        function spawnFloatingSendPill(customCodec) {
+            const container = document.getElementById('topFloatingPillContainer');
+            const active = customCodec || CODECS.find(c => c.id === appState.selectedId) || CODECS[0];
+            const rawBytes = CODECS[0].bytes || 88;
+            const savedPct = Math.max(0, Math.round(((rawBytes - active.bytes) / rawBytes) * 100));
+
+            const pill = document.createElement('div');
+            pill.className = 'cef-surface px-4 py-2 rounded-full border border-emerald-500/35 flex items-center gap-2.5 shadow-2xl anim-spring-pop';
+            pill.innerHTML = `
+                <div class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path class="svg-check-draw" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-semibold text-white">ส่งข้อความแล้ว · <span class="text-emerald-400">${active.name}</span></span>
+                <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.07] text-zinc-200">${active.bytes}/${appState.budget} B (-${savedPct}%)</span>
+            `;
+            container.appendChild(pill);
+            setTimeout(() => {
+                pill.style.opacity = '0';
+                pill.style.transform = 'translateY(-10px) scale(0.95)';
+                pill.style.transition = 'all 0.25s ease';
+                setTimeout(() => pill.remove(), 250);
+            }, 2400);
+        }
+
+        // 3. Over-Budget Shake + Warning Toast with Countdown Bar
+        function spawnOverBudgetWarning() {
+            const summaryCard = document.getElementById('classicSummaryCard');
+            if (summaryCard) {
+                summaryCard.classList.remove('anim-shake');
+                void summaryCard.offsetWidth; // trigger reflow
+                summaryCard.classList.add('anim-shake');
+            }
+
+            const stack = document.getElementById('bottomRightToastStack');
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto w-full cef-surface rounded-xl overflow-hidden border border-rose-500/40 shadow-xl anim-toast-in';
+            toast.innerHTML = `
+                <div class="p-3.5 flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                        <svg class="w-4 h-4 animate-soft-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 text-xs">
+                        <div class="font-bold text-rose-300">ขนาดข้อความเกินเพดานช่องแชต!</div>
+                        <p class="text-zinc-400 mt-0.5">ปุ่ม "บังคับ" จะไม่สลับวิธีอัตโนมัติ แนะนำให้กดโหมด Auto เพื่อเลือกตัวที่เล็กสุด</p>
+                    </div>
+                    <button onclick="setAutoSelection(); this.closest('div.cef-surface').remove()" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-[11px] font-medium shrink-0">
+                        ใช้ Auto
+                    </button>
+                </div>
+                <div class="h-0.5 bg-rose-500/70" style="animation: countdownShrink 3.2s linear forwards"></div>
+            `;
+            stack.appendChild(toast);
+            setTimeout(() => toast.remove(), 3200);
+        }
+
+        // 4. Subtle Left-Edge HUD Whisper (Non-distracting In-Game State Change)
+        function spawnHudWhisper(customText) {
+            const container = document.getElementById('leftWhisperContainer');
+            const active = CODECS.find(c => c.id === appState.selectedId) || CODECS[0];
+            const message = customText || `Auto เลือก ${active.name} (${active.bytes} bytes)`;
+
+            const whisper = document.createElement('div');
+            whisper.className = 'cef-surface px-3 py-1.5 rounded-lg border-l-2 border-l-blue-400 flex items-center gap-2 text-xs text-zinc-200 shadow-lg anim-whisper-in';
+            whisper.innerHTML = `
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span>${message}</span>
+            `;
+            container.appendChild(whisper);
+            setTimeout(() => {
+                whisper.style.opacity = '0';
+                whisper.style.transition = 'opacity 0.25s ease';
+                setTimeout(() => whisper.remove(), 250);
+            }, 2000);
+        }
+
+        function toggleCefTransparency() {
+            const b = document.body;
+            const hud = document.getElementById('mockGameHud');
+            const isTrans = b.classList.toggle('cef-transparent-bg');
+            b.classList.toggle('game-preview-bg', !isTrans);
+            hud.style.opacity = isTrans ? '0' : '1';
+        }
+
+        function closeCefUI() {
+            emitCef('thcodec:close', {});
+            spawnHudWhisper('ส่งคำสั่งปิดหน้าต่าง (กด /thcodecui เพื่อเปิดใหม่)');
+        }
+
+        window.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeCefUI();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshAllViews();
+        });
+    </script>
+</body>
+</html>
