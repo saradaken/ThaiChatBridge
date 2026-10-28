@@ -152,7 +152,7 @@
     $('homeTiming').textContent=Number(s.computeMs||0).toFixed(2)+' ms · '+(s.remaining?'รอ '+s.remaining+' วินาที':'พร้อมคำนวณ');
     $('buildVersion').textContent=s.version||'PC · เวอร์ชันยังไม่ส่งจาก Lua';
     var u=s.update||{phase:'error',message:'Updater unavailable'};
-    $('updateInfo').textContent=(u.current||'')+' · '+u.message+(u.busy?' '+(u.progress||0)+'%':'');
+    $('updateInfo').textContent=(u.current||'')+(u.latest&&u.latest!==u.current?' → '+u.latest:'')+' · '+u.message+(u.busy?' '+(u.progress||0)+'%':'');
     $('updateNotes').textContent=u.notes||'';
     $('updateCheck').disabled=!u.canCheck;$('updateInstall').hidden=!u.canInstall;$('updateInstall').disabled=!u.canInstall;
     $('updateRollback').hidden=!u.canRollback;$('updateRollback').disabled=!u.canRollback;
