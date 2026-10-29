@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "product": "ThaiChatBridge",
+  "platform": "pc-native",
+  "updater_abi": 1,
+  "revision": 2603,
+  "version": "PC R26 / Updater UI 1.1 Update 1",
+  "commit": "28176e6a648b29b0f9ca771c7c298aae097ec927",
+  "notes": "Updater UI assets: reload CEF without restarting.",
+  "files": [
+    {
+      "path": "moonloader/resource/thaichat-updater-ui.js",
+      "size": 49892,
+      "sha256": "dd006407b82a3df8e5b4236d8edbb7990fc71c5d2367f5e97cdb73972cb8e887"
+    },
+    {
+      "path": "moonloader/resource/thaichat-updater.css",
+      "size": 424379,
+      "sha256": "9d52f1bd16ca999ed060fa45a877672214665863dd2c884b5fe924f91a413bd7"
+    }
+  ]
+}
