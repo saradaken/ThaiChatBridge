@@ -6,9 +6,9 @@
 
 | ส่วน | หน้าที่ | สถานะ |
 |---|---|---|
-| ThaiChatBridge | แชตไทย บับเบิล ฟอนต์ และ codec | ชุด native R25 ในช่องเดิม; R26 3D เป็นการทดลองแยก |
-| **ThaiChatUpdater 1.1 Unified test1** | ตรวจ/ดาวน์โหลด/สำรอง/อัปเดตไฟล์ พร้อม UI | ชุด updater ปัจจุบันในหน้านี้ |
-| Codec Lab / Bento | เครื่องมือทดลอง codec และตั้งค่า | ชุด Lua/CEF เดิม เก็บไว้สำหรับรุ่นที่ตรงกัน |
+| [ThaiChatBridge](projects/ThaiChatBridge/README.md) | แชตไทย บับเบิล ฟอนต์ และ codec | ชุด native R25 ในช่องเดิม; R26 3D เป็นการทดลองแยก |
+| [ThaiChatUpdater 1.1 Unified test1](projects/ThaiChatUpdater/README.md) | ตรวจ/ดาวน์โหลด/สำรอง/อัปเดตไฟล์ พร้อม UI | ชุด updater ปัจจุบันในหน้านี้ |
+| [ThaiChatTools — Codec Lab / Bento](projects/ThaiChatTools/README.md) | เครื่องมือทดลอง codec และตั้งค่า | ชุด Lua/CEF เดิม เก็บไว้สำหรับรุ่นที่ตรงกัน |
 
 ## ดาวน์โหลดตัวอัปเดตใหม่
 
@@ -34,7 +34,7 @@ ASI ฝัง Lua bridge และ UI สำรองไว้ เมื่อ�
 - มี ASI/ไฟล์ที่ต้อง restart: ดาวน์โหลดและสำรองก่อน รอปิดเกมตามปกติแล้วจึงแทนไฟล์
 - ไฟล์ในรุ่นเดิมหายหรือ hash ไม่ตรง: เสนอ repair ได้จากปุ่มตรวจเช่นกัน ไม่ต้องจำคำสั่ง repair ในการใช้งานทั่วไป
 
-ช่อง unified รุ่นแรกเป็น **UI-only revision 2603** ไม่เปลี่ยนแกนแชต R26 หรือไฟล์คำแปล
+ช่อง unified ปัจจุบันเป็น **UI-only revision 2604 (UI Update 2)** ไม่เปลี่ยนแกนแชต R26 หรือไฟล์คำแปล
 
 ## โครงสร้าง repository
 
